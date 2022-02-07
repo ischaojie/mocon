@@ -12,6 +12,8 @@ repository = "https://github.com/ischaojie/mocon"
 python = "^3.7"
 pydantic = "^1.9.0"
 WTForms = "^3.0.1"
+starlette = "^0.18.0"
+Jinja2 = "^3.0.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
