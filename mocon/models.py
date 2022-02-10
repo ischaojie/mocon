@@ -12,7 +12,7 @@ T = TypeVar("T", bound="BaseModel")
 
 
 class Meta(pydantic.BaseConfig):
-    source = Source
+    source: ClassVar[T]
     name: ClassVar[str] = ""
     can_view: ClassVar[bool] = True
     can_edit: ClassVar[bool] = True
