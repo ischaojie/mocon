@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from mocon.models import BaseModel
+from mocon.model import BaseModel
 
 
 def test_base_model_create():

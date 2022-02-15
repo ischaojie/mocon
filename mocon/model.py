@@ -6,7 +6,7 @@ import pydantic
 from pydantic import ValidationError
 
 from mocon.fields import ModelField
-from mocon.source import Source
+from mocon.store import Source
 
 T = TypeVar("T", bound="BaseModel")
 
@@ -19,12 +19,17 @@ class Meta(pydantic.BaseConfig):
     can_delete: ClassVar[bool] = True
 
 
+class DefaultMeta:
+    pass
+
+
 class BaseModelMeta(pydantic.main.ModelMetaclass):
     __mocon_fields__: Dict[str, ModelField]
 
     @no_type_check
     def __new__(mcs, name, bases, namespace, **kwargs):
         cls = super().__new__(mcs, name, bases, namespace)
+        meta = namespace.get("Meta", None)
 
         mocon_fields: Dict[str, ModelField] = {}
         for field_name, field in cls.__fields__.items():
@@ -57,7 +62,7 @@ class BaseModel(pydantic.BaseModel, metaclass=BaseModelMeta):
 
     __mocon_fields__: Dict[str, ModelField]
 
-    Meta: ClassVar[Meta]
+    Meta: ClassVar[Meta] = DefaultMeta
     identity: ClassVar[str]
 
     @classmethod

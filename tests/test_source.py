@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 
-from mocon.source import Source
+from mocon.store import Source
 
 
 def test_source_with_file():

@@ -2,8 +2,8 @@
 from typing import ClassVar, Type, Dict
 import pydantic
 from mocon.exceptions import InvalidModelException
-from mocon.models import BaseModel
-from mocon.source import Source
+from mocon.model import BaseModel
+from mocon.store import Source
 
 
 class BaseMeta(pydantic.BaseConfig):

@@ -3,7 +3,7 @@ import pydantic
 from typing import Type, Any, Optional
 
 from mocon.exceptions import InvalidKeyException
-from mocon.models import BaseModel
+from mocon.model import BaseModel
 
 Field = pydantic.Field
 

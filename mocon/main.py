@@ -14,7 +14,7 @@ from mocon.forms import BaseForm
 
 __all__ = ["Mocon"]
 
-from mocon.models import BaseModel
+from mocon.model import BaseModel
 
 
 class BaseMocon:

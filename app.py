@@ -4,7 +4,7 @@ import uvicorn
 from starlette.applications import Starlette
 
 from mocon.main import Mocon
-from mocon.models import BaseModel
+from mocon.model import BaseModel
 
 app = Starlette(debug=True)
 db = redis.Redis(host='localhost', port=6379, db=0)
