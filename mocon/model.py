@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
-from typing import TypeVar, ClassVar, Dict, no_type_check, Any
+from tkinter import N
+from typing import Optional, TypeVar, ClassVar, Dict, no_type_check, Any
 
 import pydantic
+from pydantic import BaseConfig
 from pydantic import ValidationError
 
 from mocon.fields import ModelField
@@ -11,16 +13,16 @@ from mocon.store import Source
 T = TypeVar("T", bound="BaseModel")
 
 
-class Meta(pydantic.BaseConfig):
-    source: ClassVar[T]
-    name: ClassVar[str] = ""
-    can_view: ClassVar[bool] = True
-    can_edit: ClassVar[bool] = True
-    can_delete: ClassVar[bool] = True
+class BaseMeta(BaseConfig):
+    source: Any = None
+    name: Optional[str] = None
+    # database key
+    db_key: Optional[str] = None
 
-
-class DefaultMeta:
-    pass
+    # model control
+    can_view: bool = True
+    can_edit: bool = True
+    can_delete: bool = True
 
 
 class BaseModelMeta(pydantic.main.ModelMetaclass):
@@ -47,22 +49,10 @@ class BaseModelMeta(pydantic.main.ModelMetaclass):
 
 
 class BaseModel(pydantic.BaseModel, metaclass=BaseModelMeta):
-    """BaseModel inherits from pydantic.BaseModel
-
-    Example:
-        class User(BaseModel):
-            name: str
-            age: int
-
-            class Meta:
-                source = redis
-                key = "config:user"
-                can_edit = False
-    """
 
     __mocon_fields__: Dict[str, ModelField]
 
-    Meta: ClassVar[Meta] = DefaultMeta
+    Meta = BaseMeta
     identity: ClassVar[str]
 
     @classmethod
