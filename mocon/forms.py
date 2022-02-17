@@ -3,7 +3,7 @@ from typing import ClassVar, Type, Dict
 import pydantic
 from mocon.exceptions import InvalidModelException
 from mocon.model import BaseModel
-from mocon.store import Source
+from mocon.sources import Source
 
 
 class BaseMeta(pydantic.BaseConfig):

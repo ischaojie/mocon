@@ -6,12 +6,14 @@ from typing import Any, ClassVar, Optional, TypeVar
 from pydantic import BaseModel as PydanticBaseModel, ValidationError
 from pydantic.main import ModelMetaclass
 
+from mocon.sources import Source
+
 T = TypeVar("T", bound="BaseModel")
 
 
 class BaseMeta:
     # data source
-    source: Any = None
+    source: Source = None
 
     # the model encoding format when saving to the store
     encoding: str = "utf-8"
@@ -35,7 +37,7 @@ class BaseMeta:
 
 def _set_meta_default(cls, meta, base_meta):
     if not getattr(meta, "encoding", None):
-        meta.encoding = getattr(base_meta, "encoding")
+        meta.encoding = getattr(base_meta, "encoding", "utf-8")
 
     if not getattr(meta, "global_key_prefix", None):
         meta.global_key_prefix = getattr(base_meta, "global_key_prefix", "")
@@ -48,6 +50,9 @@ def _set_meta_default(cls, meta, base_meta):
 
     if not getattr(meta, "embedded", None):
         meta.embedded = getattr(base_meta, "embedded", False)
+
+    if not getattr(meta, "source", None):
+        meta.source = getattr(base_meta, "source", None)
 
 
 class BaseModelMeta(ModelMetaclass):
@@ -141,6 +146,3 @@ class BaseModel(PydanticBaseModel, metaclass=BaseModelMeta):
             pass
         else:
             return fields
-
-    def save(self: T) -> T:
-        pass

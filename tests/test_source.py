@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
-import io
+import pytest
 
-from mocon.store import Source
+from mocon.sources import SourceURL
 
 
-def test_source_with_file():
-    file = io.StringIO("{'a': 1}")
-    source = Source(file)
-    assert source.get()
+@pytest.mark.parametrize(
+    "url, dialect",
+    [
+        ("redis://localhost:6379/0", "redis"),
+        ("mongodb://localhost:27017/", "mongodb"),
+        ("memcached://localhost:11211/", "memcached"),
+    ],
+)
+def test_source_url(url, dialect):
+    url = SourceURL(url)
+    assert url.dialect == dialect

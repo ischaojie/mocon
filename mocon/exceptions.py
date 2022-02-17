@@ -19,3 +19,7 @@ class PrimaryKeyNotFound(MoconException):
 
 class PrimaryKeyDuplicated(MoconException):
     pass
+
+
+class NotSupportedSource(MoconException):
+    pass
