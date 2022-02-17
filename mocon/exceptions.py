@@ -11,3 +11,11 @@ class InvalidModelException(MoconException):
 
 class InvalidKeyException(MoconException):
     pass
+
+
+class PrimaryKeyNotFound(MoconException):
+    pass
+
+
+class PrimaryKeyDuplicated(MoconException):
+    pass

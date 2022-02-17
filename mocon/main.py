@@ -65,24 +65,14 @@ class Mocon(BaseMocon):
     app = FastAPI()
     mocon = Mocon(app, base_url="/config")
 
-    router = APIRouter()
-    mocon = Mocon(router)
-    from pydantic import BaseModel
-    frm mocon import BaseModel
-
     class Movie(BaseModel):
         class Meta:
-            model_name = "movie"
+            can_edit = False
 
         title: str
         year: int
 
-    class MovieForm(BaseForm):
-        model = Movie
-        name = "电影配置"
-        can_delete = False
-
-    mocon.register(MovieForm, endpoint="/movie")
+    mocon.register_model(Movie, endpoint="/movie")
     """
 
     def __init__(
