@@ -7,26 +7,33 @@ def test_model_meta_default():
         name: str
         age: int
 
-    # assert User.meta.db_key.startswith("tests.test_model:user")
-    assert User.meta.global_key_prefix == ""
-    assert User.meta.model_key_prefix == "tests.test_model:user"
-    assert User.meta.encoding == "utf-8"
-    assert User.meta.embedded == False
+    assert User.Meta.global_key_prefix == ""
+    assert User.Meta.model_key_prefix == "tests.test_model:user"
+    assert User.Meta.encoding == "utf-8"
+    assert User.Meta.embedded == False
+    assert User.Meta.db_key
+
+    user = User(name="John Doe", age=42)
+    assert user.key.startswith("tests.test_model:user:")
 
 
 def test_model_meta_no_defined_default():
     class User(BaseModel):
         class Meta:
             db_key = "test"
+            embedded = True
 
         name: str
         age: int
 
-    assert User.meta.model_key_prefix == "tests.test_model:user"
-    assert User.meta.encoding == "utf-8"
-    # assert User.meta.embedded == False
+    assert User.Meta.global_key_prefix == ""
+    assert User.Meta.model_key_prefix == "tests.test_model:user"
+    assert User.Meta.encoding == "utf-8"
+    assert User.Meta.embedded == True
+    assert User.Meta.db_key == "test"
+
     user = User(name="test", age=10)
-    assert user.key() == "tests.test_model:user:test"
+    assert user.key == "tests.test_model:user:test"
 
 
 def test_model_meta_inherited():
@@ -41,5 +48,5 @@ def test_model_meta_inherited():
     class Admin(User):
         pass
 
-    assert Admin.meta.model_key_prefix == "test"
-    assert Admin.meta.encoding == "utf-8"
+    assert Admin.Meta.model_key_prefix == "tests.test_model:admin"
+    assert Admin.Meta.encoding == "utf-8"

@@ -3,7 +3,7 @@ import json
 import uuid
 from typing import Any, ClassVar, Optional, TypeVar
 
-from pydantic import ValidationError, BaseModel as PydanticBaseModel
+from pydantic import BaseModel as PydanticBaseModel, ValidationError
 from pydantic.main import ModelMetaclass
 
 T = TypeVar("T", bound="BaseModel")
@@ -44,7 +44,10 @@ def _set_meta_default(cls, meta, base_meta):
         meta.model_key_prefix = f"{cls.__module__}:{cls.__name__}".lower()
 
     if not getattr(meta, "db_key", None):
-        meta.db_key = getattr(base_meta, "db_key", uuid.uuid4())
+        meta.db_key = getattr(base_meta, "db_key", uuid.uuid4().hex)
+
+    if not getattr(meta, "embedded", None):
+        meta.embedded = getattr(base_meta, "embedded", False)
 
 
 class BaseModelMeta(ModelMetaclass):
@@ -52,21 +55,21 @@ class BaseModelMeta(ModelMetaclass):
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs, **kwargs)
-        meta = attrs.pop("Meta", None)
+        meta = attrs.get("Meta", None)
 
         # if cls not defined Meta, get from parent
         meta = meta or getattr(cls, "Meta", None)
         base_meta = getattr(cls, "_meta", None)
         # no inherited, defined Meta
         if meta and meta != BaseMeta and meta != base_meta:
-            cls.meta = meta
+            cls.Meta = meta
             cls._meta = meta
         # inherited Meta
         elif base_meta:
             cls._meta = type(
                 f"{cls.__name__}Meta", (base_meta,), dict(base_meta.__dict__)
             )
-            cls.meta = cls._meta
+            cls.Meta = cls._meta
             # remove inherited meta attr
             cls._meta.model_key_prefix = None
         # no defined Meta, no inherited, use default
@@ -74,7 +77,7 @@ class BaseModelMeta(ModelMetaclass):
             cls._meta = type(
                 f"{cls.__name__}Meta", (BaseMeta,), dict(BaseMeta.__dict__)
             )
-            cls.meta = cls._meta
+            cls.Meta = cls._meta
 
         # set Meta default value if there is no defined
         _set_meta_default(cls, cls._meta, base_meta)
@@ -103,12 +106,29 @@ class BaseModel(PydanticBaseModel, metaclass=BaseModelMeta):
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         super().__init__(**data)
+        __pydantic_self__.validate_source()
 
+    @property
     def key(self):
         db_key = getattr(self._meta, "db_key")
-        global_prefix = getattr(self._meta, "global_key_prefix", "").strip(":")
-        model_prefix = getattr(self._meta, "model_key_prefix", "").strip(":")
-        return f"{global_prefix}:{model_prefix}:{db_key}"
+        global_prefix = getattr(self._meta, "global_key_prefix", "")
+        model_prefix = getattr(self._meta, "model_key_prefix", "")
+        return f"{global_prefix}:{model_prefix}:{db_key}".strip(":")
+
+    @classmethod
+    def validate_source(cls):
+        pass
+
+    @classmethod
+    def get(cls, key: str) -> Any:
+        pass
+
+    def set(self, key: str, value: Any) -> bool:
+        pass
+
+    @classmethod
+    def delete(cls, key: str) -> bool:
+        pass
 
     @classmethod
     def get_source(cls):
