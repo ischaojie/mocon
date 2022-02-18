@@ -2,17 +2,16 @@
 from typing import Any, Union, Optional
 from urllib.parse import SplitResult, urlsplit, unquote, parse_qsl
 
-from pymongo import MongoClient as Mongo
 from redis import Redis
 
 from mocon.exceptions import NotSupportedSource
 
 
 class Backend:
-    def get(self, key: str) -> Any:
+    def get(self, key: str) -> Union[str, None]:
         raise NotImplementedError
 
-    def set(self, key: str, value: Any) -> bool:
+    def set(self, key: str, value: str) -> bool:
         raise NotImplementedError
 
     def delete(self, key: str) -> bool:
@@ -30,18 +29,19 @@ class RedisBackend(Backend):
             port=self._url.port,
             db=int(self._url.database),
             password=self._url.password,
+            decode_responses=True,
             **self._options,
         )
         return client
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str) -> str:
         return self.connection().get(key)
 
-    def set(self, key: str, value: Any) -> bool:
+    def set(self, key: str, value: str) -> bool:
         return self.connection().set(key, value)
 
     def delete(self, key: str) -> bool:
-        pass
+        return bool(self.connection().delete(key))
 
 
 class MongoBackend(Backend):
@@ -65,10 +65,10 @@ class Source:
             raise NotSupportedSource(f"{self.url.dialect} is not supported")
         return Client(self.url, **self.options)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str) -> str:
         return self._backend.get(key)
 
-    def set(self, key: str, value: Any) -> bool:
+    def set(self, key: str, value: str) -> bool:
         return self._backend.set(key, value)
 
     def delete(self, key: str) -> bool:
