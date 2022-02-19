@@ -1,45 +1,58 @@
 # -*- coding: utf-8 -*-
-from typing import ClassVar, Type, Dict
-import pydantic
-from mocon.exceptions import InvalidModelException
-from mocon.model import BaseModel
-from mocon.sources import Source
+
+from pydantic import BaseModel
+from wtforms import Form, StringField
+from typing import Any, Callable, Dict, Sequence, no_type_check
 
 
-class BaseMeta(pydantic.BaseConfig):
-    source = Source
-    name: ClassVar[str] = ""
-    can_edit: ClassVar[bool] = True
-    can_delete: ClassVar[bool] = True
+@no_type_check
+def convert(*args: str):
+    def inner(func: Callable) -> Callable:
+        func._converter_for = frozenset(args)
+        return func
+
+    return inner
 
 
-class BaseFormMeta(pydantic.main.ModelMetaclass):
-
-    def __new__(mcs, name, bases, namespace, **kwargs):
-        __mocon_fields__: Dict[str, ]
-        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
-
-        model = kwargs.get("model")
-        if not model:
-            return cls
-
-        # check model is subclass of BaseModel
-        if not issubclass(model, BaseModel):
-            raise InvalidModelException("Class {model.__name__} is not a pydantic model")
-
-        cls.model = model
-        cls.identity = model.__name__
-        cls.name = namespace.get("name", cls.model.__name__)
-
-        return cls
+class BaseConverter:
+    def __init__(self) -> None:
+        # conv_mapping for each BaseModel type_ mapping to a converter
+        # for example: type `str` mapping to wtforms StringField
+        conv_mapping = {}
+        for name in dir(self):
+            obj = getattr(self, name)
+            if hasattr(obj, "_converter_for"):
+                for arg in obj._converter_for:
+                    conv_mapping[arg] = obj
+        self.converters = conv_mapping
+    
+    def switch_converter():
+        pass
 
 
-class BaseForm(metaclass=BaseFormMeta):
-    """Base form"""
+class Converter(BaseConverter):
+    @convert("str")
+    def conv_str(self, field_args: Dict, **kwargs: Any):
+        """convert str type to StringField"""
+        return StringField(**field_args)
 
-    Meta = ClassVar[BaseMeta]
 
-    # pydantic model
-    model: ClassVar[type]
+def model_to_form(
+    model: BaseModel,
+    only: Sequence[str] = None,
+    exclude: Sequence[str] = None,
+):
+    """Model convert to Form"""
+    conveter = Converter()
+    form_fields = {}
 
-    identity: ClassVar[str]
+    for name, model_field in model.__fields__.items():
+        if only and name not in only:
+            continue
+        if exclude and name in exclude:
+            continue
+        form_field = conveter.convert(model, model_field.type_)
+        if form_field:
+            form_fields[name] = form_field
+
+    return type(f"{model.__name__}Form", (Form,), form_fields)

@@ -10,7 +10,7 @@ def test_model_meta_default():
     assert User.Meta.global_key_prefix == ""
     assert User.Meta.model_key_prefix == "tests.test_model:user"
     assert User.Meta.encoding == "utf-8"
-    assert User.Meta.embedded == False
+    assert User.Meta.embedded
     assert User.Meta.db_key
 
     user = User(name="John Doe", age=42)
@@ -22,14 +22,15 @@ def test_model_meta_no_defined_default():
         class Meta:
             db_key = "test"
             embedded = True
+            encoding = "utf-16"
 
         name: str
         age: int
 
     assert User.Meta.global_key_prefix == ""
     assert User.Meta.model_key_prefix == "tests.test_model:user"
-    assert User.Meta.encoding == "utf-8"
-    assert User.Meta.embedded == True
+    assert User.Meta.encoding == "utf-16"
+    assert User.Meta.embedded
     assert User.Meta.db_key == "test"
 
     user = User(name="test", age=10)
@@ -48,5 +49,6 @@ def test_model_meta_inherited():
     class Admin(User):
         pass
 
+    assert Admin.Meta.global_key_prefix == ""
     assert Admin.Meta.model_key_prefix == "tests.test_model:admin"
     assert Admin.Meta.encoding == "utf-8"
