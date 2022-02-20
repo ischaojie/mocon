@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Sequence, Union, no_type_check
 
 from pydantic import BaseModel
 from pydantic.fields import ModelField
-from wtforms import Form, StringField, validators, Field
+from wtforms import Field, Form, IntegerField, StringField, validators
 
 
 @no_type_check
@@ -37,7 +37,7 @@ class BaseConverter:
             "validators": [],
             "filters": [],
             "description": field_info.description,
-            "default": field_info.default,
+            "default": field.default,
             "name": field_info.title,
         }
         # add validators
@@ -46,19 +46,24 @@ class BaseConverter:
         else:
             field_args["validators"].append(validators.Optional())
 
-        # TODO: validator length (min=- 1, max=- 1, message=None)
+        # TODO: validator length (min=-1, max=-1, message=None)
 
         converter = self.converters.get(field.type_.__name__)
         if not converter:
             pass
-        return converter(**field_args)
+        return converter(field_args=field_args)
 
 
 class Converter(BaseConverter):
     @convert("str")
-    def conv_str(self, field_args: Dict, **kwargs: Any) -> Field:
+    def handle_str(self, field_args: Dict, **kwargs: Any) -> Field:
         """convert str type to StringField"""
         return StringField(**field_args)
+
+    @convert("int")
+    def handle_int(self, field_args: Dict, **kwargs: Any) -> Field:
+        """convert int type to StringField"""
+        return IntegerField(**field_args)
 
 
 def model_to_form(
@@ -75,7 +80,7 @@ def model_to_form(
             continue
         if exclude and name in exclude:
             continue
-        form_field = conveter.convert(model, model_field)
+        form_field = conveter.convert(model_field)
         if form_field:
             form_fields[name] = form_field
 
