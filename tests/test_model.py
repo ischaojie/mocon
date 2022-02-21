@@ -10,7 +10,7 @@ def test_model_meta_default():
     assert User.Meta.global_key_prefix == ""
     assert User.Meta.model_key_prefix == "tests.test_model:user"
     assert User.Meta.encoding == "utf-8"
-    assert User.Meta.embedded
+    assert not User.Meta.embedded
     assert User.Meta.db_key
 
     user = User(name="John Doe", age=42)

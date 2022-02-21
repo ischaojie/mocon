@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from pydantic.fields import ModelField
 from wtforms import Field, Form, IntegerField, StringField, validators
 
+SUPPORTED_CONVERTERS = ("str", "int")
+
 
 @no_type_check
 def convert(*args: str):
@@ -26,7 +28,8 @@ class BaseConverter:
             if hasattr(obj, "_converter_for"):
                 for arg in obj._converter_for:
                     conv_mapping[arg] = obj
-        self.converters = conv_mapping
+
+        self.handlers = conv_mapping
 
     def convert(self, field: ModelField):
         # https://wtforms.readthedocs.io/en/3.0.x/fields/#wtforms.fields.Field.__init__
@@ -46,18 +49,26 @@ class BaseConverter:
         else:
             field_args["validators"].append(validators.Optional())
 
-        # TODO: validator length (min=-1, max=-1, message=None)
-
-        converter = self.converters.get(field.type_.__name__)
+        converter = self.handlers.get(field.type_.__name__)
         if not converter:
             pass
-        return converter(field_args=field_args)
+        return converter(field=field, field_args=field_args)
 
 
 class Converter(BaseConverter):
-    @convert("str")
-    def handle_str(self, field_args: Dict, **kwargs: Any) -> Field:
+    @convert("str", "ConstrainedStrValue")
+    def handle_str(self, field: ModelField, field_args: Dict, **kwargs: Any) -> Field:
         """convert str type to StringField"""
+        if field.type_.__name__ == "ConstrainedStrValue":
+            min_length = (
+                field.type_.min_length if hasattr(field.type_, "min_length") else -1
+            )
+            max_length = (
+                field.type_.max_length if hasattr(field.type_, "max_length") else -1
+            )
+            field_args["validators"].append(
+                validators.Length(min=min_length, max=max_length)
+            )
         return StringField(**field_args)
 
     @convert("int")
