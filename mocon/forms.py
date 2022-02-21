@@ -4,7 +4,20 @@ from typing import Any, Callable, Dict, Sequence, Union, no_type_check
 
 from pydantic import BaseModel
 from pydantic.fields import ModelField
-from wtforms import Field, Form, IntegerField, StringField, validators
+from wtforms import (
+    BooleanField,
+    Field,
+    Form,
+    IntegerField,
+    StringField,
+    validators,
+    DateField,
+    DateTimeField,
+    EmailField,
+    DecimalField,
+    URLField,
+    PasswordField,
+)
 
 SUPPORTED_CONVERTERS = ("str", "int")
 
@@ -56,10 +69,12 @@ class BaseConverter:
 
 
 class Converter(BaseConverter):
-    @convert("str", "ConstrainedStrValue")
+    # TODO: should use constr
+    # short_str: constr(min_length=2, max_length=10)
+    @convert("str", "constr")
     def handle_str(self, field: ModelField, field_args: Dict, **kwargs: Any) -> Field:
         """convert str type to StringField"""
-        if field.type_.__name__ == "ConstrainedStrValue":
+        if field.type_.__name__ == "constr":
             min_length = (
                 field.type_.min_length if hasattr(field.type_, "min_length") else -1
             )
@@ -73,8 +88,35 @@ class Converter(BaseConverter):
 
     @convert("int")
     def handle_int(self, field_args: Dict, **kwargs: Any) -> Field:
-        """convert int type to StringField"""
         return IntegerField(**field_args)
+
+    @convert("bool")
+    def handle_bool(self, field_args: Dict, **kwargs: Any) -> Field:
+        return BooleanField(**field_args)
+
+    @convert("float")
+    def handle_float(self, field_args: Dict, **kwargs: Any) -> Field:
+        return DecimalField(**field_args)
+
+    @convert("datetime")
+    def handle_datetime(self, field_args: Dict, **kwargs: Any) -> Field:
+        return DateTimeField(**field_args)
+
+    @convert("date")
+    def handle_date(self, field_args: Dict, **kwargs: Any) -> Field:
+        return DateField(**field_args)
+
+    @convert("EmailStr")
+    def handle_email(self, field_args: Dict, **kwargs: Any) -> Field:
+        return EmailField(**field_args)
+
+    @convert("HttpUrl")
+    def handle_url(self, field_args: Dict, **kwargs: Any) -> Field:
+        return URLField(**field_args)
+
+    @convert("SecretStr")
+    def handle_password(self, field_args: Dict, **kwargs: Any) -> Field:
+        return PasswordField(**field_args)
 
 
 def model_to_form(
