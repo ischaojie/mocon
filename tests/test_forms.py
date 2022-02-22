@@ -14,11 +14,6 @@ class User(BaseModel):
     age: int
 
 
-def test_converter_handlers():
-    converter = Converter()
-    for type_ in converter.handlers.keys():
-        assert type_ in SUPPORTED_CONVERTERS
-
 
 def test_converter_handle_str():
     class My(BaseModel):

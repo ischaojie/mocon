@@ -21,5 +21,9 @@ class PrimaryKeyDuplicated(MoconException):
     pass
 
 
+class NoSourceError(MoconException):
+    pass
+
+
 class NotSupportedSource(MoconException):
     pass

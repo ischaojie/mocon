@@ -7,6 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel, ValidationError
 from pydantic.main import ModelMetaclass
 
 from mocon.sources import Source
+from mocon.exceptions import NoSourceError
 
 T = TypeVar("T", bound="BaseModel")
 
@@ -122,18 +123,21 @@ class BaseModel(PydanticBaseModel, metaclass=BaseModelMeta):
 
     @classmethod
     def validate_source(cls):
-        pass
+        if cls._meta.source is None or not isinstance(cls._meta.source, Source):
+            raise NoSourceError("Model must have a Source client")
 
     @classmethod
-    def get(cls, key: str) -> Any:
-        pass
+    def get(cls, key: str) -> Optional["BaseModel"]:
+        data = cls._meta.source.get(key)
+        if not data:
+            return None
+        return cls.parse_raw(data, encoding=cls._meta.encoding)
 
-    def set(self, key: str, value: Any) -> bool:
-        pass
+    def save(self) -> bool:
+        return self._meta.source.set(self.key, self.json())
 
-    @classmethod
-    def delete(cls, key: str) -> bool:
-        pass
+    def delete(self) -> bool:
+        return self._meta.source.delete(self.key)
 
     @classmethod
     def get_source(cls):

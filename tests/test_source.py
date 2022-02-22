@@ -34,4 +34,7 @@ def test_source(url):
     source = Source(url)
     assert source.set("ping", "pong")
     assert source.get("ping") == "pong"
+    assert source.set("ping", "pong2")
+    assert source.get("ping") == "pong2"
     assert source.delete("ping")
+    assert source.get("ping") is None

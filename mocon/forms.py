@@ -69,12 +69,11 @@ class BaseConverter:
 
 
 class Converter(BaseConverter):
-    # TODO: should use constr
-    # short_str: constr(min_length=2, max_length=10)
-    @convert("str", "constr")
+
+    @convert("str", "constr", "ConstrainedStrValue")
     def handle_str(self, field: ModelField, field_args: Dict, **kwargs: Any) -> Field:
         """convert str type to StringField"""
-        if field.type_.__name__ == "constr":
+        if field.type_.__name__ in ["constr", "ConstrainedStrValue"]:
             min_length = (
                 field.type_.min_length if hasattr(field.type_, "min_length") else -1
             )

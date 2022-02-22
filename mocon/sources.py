@@ -34,7 +34,7 @@ class RedisBackend(Backend):
         )
         return client
 
-    def get(self, key: str) -> str:
+    def get(self, key: str) -> Union[str, None]:
         return self.connection().get(key)
 
     def set(self, key: str, value: str) -> bool:
