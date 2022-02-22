@@ -68,25 +68,38 @@ class BaseConverter:
         return converter(field=field, field_args=field_args)
 
 
-class Converter(BaseConverter):
+def get_field_type_attr(field: Field, attr: str) -> Any:
+    """Get field attribute"""
+    field_type = field.type_
+    if not hasattr(field_type, attr):
+        return None
+    return getattr(field_type, attr)
 
+
+class Converter(BaseConverter):
     @convert("str", "constr", "ConstrainedStrValue")
     def handle_str(self, field: ModelField, field_args: Dict, **kwargs: Any) -> Field:
         """convert str type to StringField"""
         if field.type_.__name__ in ["constr", "ConstrainedStrValue"]:
-            min_length = (
-                field.type_.min_length if hasattr(field.type_, "min_length") else -1
-            )
-            max_length = (
-                field.type_.max_length if hasattr(field.type_, "max_length") else -1
-            )
+            min_length = get_field_type_attr(field, "min_length") or -1
+            max_length = get_field_type_attr(field, "max_length") or -1
             field_args["validators"].append(
                 validators.Length(min=min_length, max=max_length)
             )
         return StringField(**field_args)
 
-    @convert("int")
-    def handle_int(self, field_args: Dict, **kwargs: Any) -> Field:
+    @convert("int", "conint", "ConstrainedIntValue")
+    def handle_int(self, field: ModelField, field_args: Dict, **kwargs: Any) -> Field:
+        if field.type_.__name__ in ["conint", "ConstrainedIntValue"]:
+            min_value = get_field_type_attr(field, "gt") or get_field_type_attr(
+                field, "ge"
+            )
+            max_value = get_field_type_attr(field, "lt") or get_field_type_attr(
+                field, "le"
+            )
+            field_args["validators"].append(
+                validators.NumberRange(min=min_value, max=max_value)
+            )
         return IntegerField(**field_args)
 
     @convert("bool")

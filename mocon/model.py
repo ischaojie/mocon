@@ -138,15 +138,3 @@ class BaseModel(PydanticBaseModel, metaclass=BaseModelMeta):
 
     def delete(self) -> bool:
         return self._meta.source.delete(self.key)
-
-    @classmethod
-    def get_source(cls):
-        # choice_source()
-        source = cls.Meta.source.get(cls.Meta.name)
-        try:
-            j_source = json.loads(source, encoding="utf-8")
-            fields = cls.parse_obj(j_source)
-        except ValidationError as e:
-            pass
-        else:
-            return fields

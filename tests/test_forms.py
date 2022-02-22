@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from operator import le
 from wsgiref.validate import validator
 from mocon.forms import Converter, model_to_form, SUPPORTED_CONVERTERS
 from mocon.model import BaseModel
@@ -12,7 +13,6 @@ from mocon import Field
 class User(BaseModel):
     name: str
     age: int
-
 
 
 def test_converter_handle_str():
@@ -37,9 +37,13 @@ def test_converter_handle_str():
 
 def test_converter_handle_int():
     class MyInt(BaseModel):
-        age: int
+        age: int = Field(ge=12, le=100)
 
-    pass
+    int_field = Converter().convert(MyInt.__fields__["age"])
+    assert int_field.field_class == IntegerField
+    validator_cls = [v.__class__ for v in int_field.kwargs["validators"]]
+    assert validators.InputRequired in validator_cls
+    assert validators.NumberRange in validator_cls
 
 
 def test_model_to_form_fields_exist():
